@@ -1,16 +1,14 @@
-import { Elysia, t } from 'elysia';
+import { Elysia } from 'elysia';
 
-const app = new Elysia({ prefix: '/api' })
-  .get('/', () => {
-    return {
-      message: 'Hello World',
-    };
-  })
-  .post('/', ({ body }) => body, {
-    body: t.Object({
-      name: t.String(),
-    }),
-  });
+const rooms = new Elysia({ prefix: '/room' }).post('/create', () => {
+  const hello = 'Hello from Post Romm';
+
+  return {
+    hello,
+  };
+});
+
+const app = new Elysia({ prefix: '/api' }).use(rooms);
 
 export const GET = app.fetch;
 export const POST = app.fetch;

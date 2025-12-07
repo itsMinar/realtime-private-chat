@@ -1,5 +1,7 @@
 'use client';
 
+import { client } from '@/lib/client';
+import { useMutation } from '@tanstack/react-query';
 import { nanoid } from 'nanoid';
 import { useEffect, useState } from 'react';
 
@@ -30,6 +32,16 @@ export default function HomePage() {
     main();
   }, []);
 
+  const { mutate: createRoom, isPending: isCreatingRoom } = useMutation({
+    mutationFn: async () => {
+      const res = await client.room.create.post();
+
+      if (res.status === 200) {
+        console.log('🚀 ~ res:', res);
+      }
+    },
+  });
+
   return (
     <main className='flex min-h-screen flex-col items-center justify-center p-4'>
       <div className='w-full max-w-md space-y-8'>
@@ -56,8 +68,11 @@ export default function HomePage() {
               </div>
             </div>
 
-            <button className='mt-2 w-full cursor-pointer bg-zinc-100 p-3 text-sm font-bold text-black transition-colors hover:bg-zinc-50 hover:text-black disabled:opacity-50'>
-              CREATE SECURE ROOM
+            <button
+              onClick={() => createRoom()}
+              className='mt-2 w-full cursor-pointer bg-zinc-100 p-3 text-sm font-bold text-black transition-colors hover:bg-zinc-50 hover:text-black disabled:opacity-50'
+            >
+              {isCreatingRoom ? 'CREATING...' : 'CREATE SECURE ROOM'}
             </button>
           </div>
         </div>
