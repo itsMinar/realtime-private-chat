@@ -3,11 +3,15 @@
 import { useUsername } from '@/hooks/use-username';
 import { client } from '@/lib/client';
 import { useMutation } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function HomePage() {
   const router = useRouter();
   const { username } = useUsername();
+
+  const searchParams = useSearchParams();
+  const wasDestroyed = searchParams.get('destroyed') === 'true';
+  const error = searchParams.get('error');
 
   const { mutate: createRoom, isPending: isCreatingRoom } = useMutation({
     mutationFn: async () => {
@@ -22,6 +26,31 @@ export default function HomePage() {
   return (
     <main className='flex min-h-screen flex-col items-center justify-center p-4'>
       <div className='w-full max-w-md space-y-8'>
+        {wasDestroyed && (
+          <div className='border border-red-900 bg-red-950/50 p-4 text-center'>
+            <p className='text-sm font-bold text-red-500'>ROOM DESTROYED</p>
+            <p className='mt-1 text-xs text-zinc-500'>
+              All messages were permanently deleted.
+            </p>
+          </div>
+        )}
+        {error === 'room-not-found' && (
+          <div className='border border-red-900 bg-red-950/50 p-4 text-center'>
+            <p className='text-sm font-bold text-red-500'>ROOM NOT FOUND</p>
+            <p className='mt-1 text-xs text-zinc-500'>
+              This room may have expired or never existed.
+            </p>
+          </div>
+        )}
+        {error === 'room-full' && (
+          <div className='border border-red-900 bg-red-950/50 p-4 text-center'>
+            <p className='text-sm font-bold text-red-500'>ROOM FULL</p>
+            <p className='mt-1 text-xs text-zinc-500'>
+              This room is at maximum capacity.
+            </p>
+          </div>
+        )}
+
         <div className='space-y-2 text-center'>
           <h1 className='text-2xl font-bold tracking-tight text-green-500'>
             {'>'}private_chat
