@@ -4,16 +4,25 @@ import { useUsername } from '@/hooks/use-username';
 import { client } from '@/lib/client';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
 export default function HomePage() {
-  const router = useRouter();
+  return (
+    <Suspense>
+      <Lobby />
+    </Suspense>
+  );
+}
+
+const Lobby = () => {
   const { username } = useUsername();
+  const router = useRouter();
 
   const searchParams = useSearchParams();
   const wasDestroyed = searchParams.get('destroyed') === 'true';
   const error = searchParams.get('error');
 
-  const { mutate: createRoom, isPending: isCreatingRoom } = useMutation({
+  const { mutate: createRoom } = useMutation({
     mutationFn: async () => {
       const res = await client.room.create.post();
 
@@ -78,11 +87,11 @@ export default function HomePage() {
               onClick={() => createRoom()}
               className='mt-2 w-full cursor-pointer bg-zinc-100 p-3 text-sm font-bold text-black transition-colors hover:bg-zinc-50 hover:text-black disabled:opacity-50'
             >
-              {isCreatingRoom ? 'CREATING...' : 'CREATE SECURE ROOM'}
+              CREATE SECURE ROOM
             </button>
           </div>
         </div>
       </div>
     </main>
   );
-}
+};
