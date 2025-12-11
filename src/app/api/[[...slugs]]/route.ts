@@ -1,3 +1,4 @@
+import { Message, realtime } from '@/lib/realtime';
 import { redis } from '@/lib/redis';
 import { Elysia } from 'elysia';
 import { nanoid } from 'nanoid';
@@ -21,8 +22,35 @@ const rooms = new Elysia({ prefix: '/room' }).post('/create', async () => {
 
 const messages = new Elysia({ prefix: '/messages' }).use(authMiddleware).post(
   '/',
-  ({ auth, body }) => {
+  async ({ auth, body }) => {
     const { sender, text } = body;
+
+    const { roomId } = auth;
+
+    const roomExists = await redis.exists(`meta:${roomId}`);
+
+    if (!roomExists) {
+      throw new Error('Room does not exist');
+    }
+
+    const message: Message = {
+      id: nanoid(),
+      sender,
+      text,
+      timestamp: Date.now(),
+      roomId,
+    };
+
+    // add message to history
+    await redis.rpush(`messages:${roomId}`, { ...message, token: auth.token });
+    await realtime.channel(roomId).emit('chat.message', message);
+
+    // housekeeping
+    const remaining = await redis.ttl(`meta:${roomId}`);
+
+    await redis.expire(`messages:${roomId}`, remaining);
+    await redis.expire(`history:${roomId}`, remaining);
+    await redis.expire(roomId, remaining);
   },
   {
     query: z.object({
